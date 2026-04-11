@@ -110,7 +110,7 @@
             :content-style="{ display: 'flex', alignItems: 'center' }"
           >
             <div class="desc" :style="{ opacity: element.show ? null : 0.6 }">
-              <img class="logo" :src="`/logo/${element.name}.png`" alt="logo" />
+              <img class="logo" :src="getLogoUrl(element.name)" alt="logo" />
               <n-text class="news-name" v-html="element.label" />
             </div>
             <n-switch
@@ -148,6 +148,7 @@ import { storeToRefs } from "pinia";
 import { mainStore } from "@/store";
 import { useOsTheme } from "naive-ui";
 import draggable from "vuedraggable";
+import { getLogoUrl } from "@/utils/getLogoUrl";
 
 const store = mainStore();
 const osThemeRef = useOsTheme();

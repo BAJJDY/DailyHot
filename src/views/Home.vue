@@ -15,7 +15,7 @@
         :key="item"
         :style="{ animationDelay: index / 10 + 0.2 + 's' }"
       >
-        <HotList :hotData="item" />
+        <HotList :hotData="item" :initialData="allHotData[item.name]" />
       </n-grid-item>
     </n-grid>
     <div class="error" v-else>
@@ -30,10 +30,33 @@
 </template>
 
 <script setup>
+import { shallowReactive, onMounted } from "vue";
 import { mainStore } from "@/store";
 import HotList from "@/components/HotList.vue";
+import { getHotLists } from "@/api";
 
 const store = mainStore();
+// shallowReactive：key 变化时触发响应，但不深度代理 value，减少开销
+const allHotData = shallowReactive({});
+
+// 全部并发，谁先回来谁先渲染
+const fetchAllHotData = () => {
+  const visibleNews = store.newsArr
+    .filter((item) => item.show)
+    .sort((a, b) => a.order - b.order);
+
+  visibleNews.forEach((item) => {
+    getHotLists(item.name, false, item.params)
+      .then((result) => {
+        if (result.code === 200) {
+          allHotData[item.name] = result;
+        }
+      })
+      .catch((error) => {
+        console.error(`获取 ${item.name} 热榜数据失败:`, error);
+      });
+  });
+};
 
 // 重置
 const reset = () => {
@@ -50,6 +73,11 @@ const reset = () => {
     },
   });
 };
+
+// 页面加载时获取所有热榜数据
+onMounted(() => {
+  fetchAllHotData();
+});
 </script>
 
 <style lang="scss" scoped>

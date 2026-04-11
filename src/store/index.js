@@ -21,135 +21,111 @@ export const mainStore = defineStore("mainData", {
           show: true,
         },
         {
-          label: "腾讯新闻",
-          name: "qq-news",
+          label: "快手",
+          name: "kuaishou",
           order: 2,
+          show: true,
+        },
+        {
+          label: "AcFun",
+          name: "acfun",
+          order: 3,
           show: true,
         },
         {
           label: "百度",
           name: "baidu",
-          order: 3,
+          order: 4,
           show: true,
         },
         {
           label: "知乎",
           name: "zhihu",
-          order: 4,
+          order: 5,
           show: true,
         },
         {
           label: "微博",
           name: "weibo",
-          order: 5,
+          order: 6,
           show: true,
         },
         {
-          label: "36氪",
-          name: "36kr",
-          order: 6,
+          label: "吾爱破解",
+          name: "52pojie",
+          order: 7,
+          show: true,
+        },
+        {
+          label: "CSDN",
+          name: "csdn",
+          order: 8,
+          show: true,
+        },
+        {
+          label: "GitHub",
+          name: "github",
+          order: 9,
           show: true,
         },
         {
           label: "少数派",
           name: "sspai",
-          order: 7,
+          order: 10,
           show: true,
         },
         {
           label: "IT之家",
           name: "ithome",
-          order: 8,
+          order: 11,
           show: true,
         },
         {
           label: "澎湃新闻",
           name: "thepaper",
-          order: 9,
+          order: 12,
           show: true,
         },
         {
           label: "今日头条",
           name: "toutiao",
-          order: 10,
+          order: 13,
           show: true,
         },
         {
           label: "百度贴吧",
           name: "tieba",
-          order: 11,
+          order: 14,
           show: true,
         },
         {
           label: "稀土掘金",
           name: "juejin",
-          order: 12,
+          order: 15,
           show: true,
         },
         {
           label: "豆瓣电影",
           name: "douban-movie",
-          order: 13,
-          show: true,
-        },
-        {
-          label: "原神",
-          name: "genshin",
-          order: 14,
-          show: true,
-        },
-        {
-          label: "LOL",
-          name: "lol",
-          order: 15,
-          show: true,
-        },
-        {
-          label: "崩坏：星穹铁道",
-          name: "starrail",
           order: 16,
-          show: true,
-        },
-        {
-          label: "网易新闻",
-          name: "netease-news",
-          order: 17,
-          show: true,
-        },
-        {
-          label: "微信读书",
-          name: "weread",
-          order: 18,
-          show: true,
-        },
-        {
-          label: "豆瓣讨论小组",
-          name: "douban-group",
-          order: 19,
-          show: true,
-        },
-        {
-          label: "NGA",
-          name: "ngabbs",
-          order: 20,
           show: true,
         },
         {
           label: "HelloGitHub",
           name: "hellogithub",
-          order: 21,
+          order: 17,
           show: true,
         },
         {
-          label: "简书",
-          name: "jianshu",
-          order: 22,
+          label: "腾讯新闻",
+          name: "qq-news",
+          order: 18,
           show: true,
         },
         {
-          label: "知乎日报",
-          name: "zhihu-daily",
-          order: 23,
+          label: "网易新闻",
+          name: "netease-news",
+          order: 19,
           show: true,
         },
       ],
@@ -162,6 +138,8 @@ export const mainStore = defineStore("mainData", {
       timeData: null,
       // 字体大小
       listFontSize: 16,
+      // 热榜版本号（用于强制更新）
+      newsVersion: "1.3.0",
     };
   },
   getters: {},
@@ -179,7 +157,21 @@ export const mainStore = defineStore("mainData", {
       const mainData = JSON.parse(localStorage.getItem("mainData"));
       let updatedNum = 0;
       if (!mainData) return false;
-      console.log("列表尝试更新", this.defaultNewsArr, this.newsArr);
+      
+      // 检查版本号，如果版本号不匹配则强制更新
+      const currentVersion = mainData.newsVersion || "0.0.0";
+      const latestVersion = "1.3.0";
+      
+      if (currentVersion !== latestVersion) {
+        console.log(`检测到新版本 ${latestVersion}，强制更新热榜列表`);
+        // 强制更新为默认列表
+        this.newsArr = this.defaultNewsArr;
+        this.newsVersion = latestVersion;
+        $message.success("热榜列表已更新到最新版本");
+        return;
+      }
+      
+
       // 执行比较并迁移 - 重新排序为默认顺序
       const newNewsArr = [];
       // 按照defaultNewsArr的顺序重新排列
@@ -200,6 +192,11 @@ export const mainStore = defineStore("mainData", {
           newNewsArr.push(newItem);
         }
       }
+      // 检查是否有被删除的条目
+      const deletedNum = this.newsArr.length - newNewsArr.length;
+      if (deletedNum > 0) {
+        console.log(`删除了 ${deletedNum} 个榜单`);
+      }
       // 更新为新顺序
       this.newsArr = newNewsArr;
       if (updatedNum) $message.success(`成功更新 ${updatedNum} 个榜单数据`);
@@ -215,6 +212,7 @@ export const mainStore = defineStore("mainData", {
         "linkOpenType",
         "headerFixed",
         "listFontSize",
+        "newsVersion",
       ],
     },
   ],

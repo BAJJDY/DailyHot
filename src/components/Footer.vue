@@ -1,5 +1,8 @@
 <template>
   <footer>
+    <n-text class="notice" :depth="3">
+      ⓘ 排行榜根据稿件内容质量，近期的数据综合展示，动态更新
+    </n-text>
     <div class="copyright">
       <n-text class="description" v-html="packageJson.description" />
       <n-text
@@ -40,6 +43,12 @@ footer {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  .notice {
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+  }
   .copyright {
     margin-bottom: 4px;
     .description {

@@ -11,8 +11,10 @@ export const getHotLists = (type, isNew = false, params) => {
   return axios({
     method: "GET",
     url: `/api/${type}`,
+    headers: {
+      "X-Use-Cache": !isNew ? "true" : "false",
+    },
     params: {
-      cache: !isNew,
       ...params,
     },
   });

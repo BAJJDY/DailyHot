@@ -48,6 +48,17 @@ export default defineConfig(({ mode }) => {
                 cacheName: "image-cache",
               },
             },
+            {
+              urlPattern: /^\/api\/.*$/,
+              handler: "StaleWhileRevalidate",
+              options: {
+                cacheName: "api-cache",
+                expiration: {
+                  maxEntries: 50,
+                  maxAgeSeconds: 60 * 60, // 1 hour
+                },
+              },
+            },
           ],
         },
         manifest: {
@@ -68,6 +79,13 @@ export default defineConfig(({ mode }) => {
         },
       }),
     ],
+    css: {
+      preprocessorOptions: {
+        scss: {
+          api: "modern-compiler",
+        },
+      },
+    },
     resolve: {
       alias: {
         "@": fileURLToPath(new URL("./src", import.meta.url)),
@@ -79,7 +97,7 @@ export default defineConfig(({ mode }) => {
         '/api': {
           target: 'http://localhost:6688',
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api/, ''),
+          // 不 rewrite，/api/bilibili 原样转发到后端 /api/bilibili
         },
       },
     },

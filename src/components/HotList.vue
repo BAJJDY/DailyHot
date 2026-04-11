@@ -13,8 +13,9 @@
         <div class="name">
           <n-avatar
             class="ico"
-            :src="`/logo/${hotData.name}.png`"
+            :src="logoSrc"
             fallback-src="/ico/icon_error.png"
+            @contextmenu.prevent
           />
           <n-text class="name-text">{{ hotData.label }}</n-text>
         </div>
@@ -141,6 +142,7 @@ import { getHotLists } from "@/api";
 import { formatTime } from "@/utils/getTime";
 import { mainStore } from "@/store";
 import { useRouter } from "vue-router";
+import { computed } from "vue";
 
 const router = useRouter();
 const store = mainStore();
@@ -150,6 +152,27 @@ const props = defineProps({
     type: Object,
     default: {},
   },
+  // 初始数据（来自父组件）
+  initialData: {
+    type: Object,
+    default: null,
+  },
+});
+
+// 图标路径 - 优先使用png，如果不存在则使用jpg
+const logoSrc = computed(() => {
+  const name = props.hotData.name;
+  if (!name) {
+    return '/ico/icon_error.png';
+  }
+  // 检查是否存在jpg格式的图标（注意：52pojie对应wuaipojie.jpg）
+  if (name === '52pojie') {
+    return '/logo/wuaipojie.jpg';
+  }
+  if (name === 'csdn') {
+    return '/logo/csdn.jpg';
+  }
+  return `/logo/${name}.png`;
 });
 
 // 更新时间
@@ -209,8 +232,8 @@ const getNewData = () => {
 
 // 链接跳转
 const jumpLink = (data) => {
-  if (!data.url || !data.mobileUrl) return $message.error("链接不存在");
-  const url = window.innerWidth > 680 ? data.url : data.mobileUrl;
+  if (!data.url) return $message.error("链接不存在");
+  const url = window.innerWidth > 680 ? data.url : (data.mobileUrl || data.url);
   if (store.linkOpenType === "open") {
     window.open(url, "_blank");
   } else if (store.linkOpenType === "href") {
@@ -232,22 +255,34 @@ const toList = () => {
   }
 };
 
-// 判断列表是否显示
+// 判断列表是否显示（仅在父组件无法提供数据时的兜底）
+let _observer = null;
 const checkListShow = () => {
   const typeName = props.hotData.name;
   const listId = "hot-list-" + typeName;
   const listDom = document.getElementById(listId);
-  const observer = new IntersectionObserver((entries) => {
+  if (!listDom) return;
+  _observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
       if (entry.isIntersecting) {
-        console.log(`👀 ${typeName} 可见，开始加载`);
+        if (hotListData.value) {
+          _observer.unobserve(entry.target);
+          return;
+        }
         getHotListsData(props.hotData.name);
-        observer.unobserve(entry.target);
+        _observer.unobserve(entry.target);
       }
     });
   });
-  observer.observe(listDom);
+  _observer.observe(listDom);
 };
+
+onUnmounted(() => {
+  if (_observer) {
+    _observer.disconnect();
+    _observer = null;
+  }
+});
 
 // 实时改变更新时间
 watch(
@@ -259,8 +294,27 @@ watch(
   }
 );
 
+// 监听初始数据变化，父组件异步填充后同步过来
+watch(
+  () => props.initialData,
+  (val) => {
+    if (val) {
+      hotListData.value = val;
+      // 数据到了，取消 observer 避免重复请求
+      if (_observer) {
+        _observer.disconnect();
+        _observer = null;
+      }
+    }
+  },
+  { immediate: true }
+);
+
 onMounted(() => {
-  checkListShow();
+  // 父组件数据还没到时才启动懒加载兜底
+  if (!hotListData.value) {
+    checkListShow();
+  }
 });
 </script>
 

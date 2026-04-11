@@ -12,7 +12,7 @@
       >
         {{ item.label }}
         <template #avatar>
-          <img :src="`/logo/${item.name}.png`" alt="logo" class="logo" />
+          <img :src="getLogoUrl(item.name)" alt="logo" class="logo" />
         </template>
       </n-tag>
     </n-space>
@@ -27,7 +27,7 @@
           <template v-else>
             <div class="header">
               <div class="logo">
-                <img :src="`/logo/${listType}.png`" alt="logo" />
+                <img :src="getLogoUrl(listType)" alt="logo" />
               </div>
               <div class="name">
                 <n-text class="title">{{ listData.title }}</n-text>
@@ -40,9 +40,8 @@
                   v-if="listData.total"
                   :depth="3"
                   class="total"
-                  v-html="listData.total"
-                />
-                <n-text :depth="3" class="time" v-html="updateTime" />
+                >{{ listData.total }}</n-text>
+                <n-text :depth="3" class="time">{{ updateTime }}</n-text>
               </div>
             </div>
           </template>
@@ -88,22 +87,33 @@
                     {{ index + 1 + (pageNumber - 1) * 20 }}
                   </n-text>
                 </template>
-                <div class="text">
-                  <n-text class="title" v-html="item.title" />
-                  <n-text
-                    v-if="item.desc"
-                    class="desc"
-                    :depth="3"
-                    v-html="item.desc"
+                <div class="item-body">
+                  <img
+                    v-if="item.cover"
+                    class="cover"
+                    :src="item.cover"
+                    loading="lazy"
+                    @error="(e) => e.target.style.display = 'none'"
                   />
-                </div>
-                <div class="message">
-                  <div class="hot" v-if="item.hot">
-                    <n-icon :depth="3" :component="Fire" />
-                    <n-text class="hot-text" :depth="3" v-html="item.hot" />
+                  <div class="text">
+                    <n-text class="title">{{ item.title }}</n-text>
+                    <n-text
+                      v-if="item.desc"
+                      class="desc"
+                      :depth="3"
+                    >{{ item.desc }}</n-text>
+                    <div class="message">
+                      <div class="author" v-if="item.author">
+                        <n-icon :depth="3" :component="User" />
+                        <n-text class="author-text" :depth="3">{{ item.author }}</n-text>
+                      </div>
+                      <div class="hot" v-if="item.hot">
+                        <n-icon :depth="3" :component="Fire" />
+                        <n-text class="hot-text" :depth="3">{{ item.hot }}</n-text>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </n-list-item>
+                </div>              </n-list-item>
             </n-list>
             <n-pagination
               class="pagination"
@@ -120,11 +130,12 @@
 </template>
 
 <script setup>
-import { Fire } from "@icon-park/vue-next";
+import { Fire, User } from "@icon-park/vue-next";
 import { mainStore } from "@/store";
 import { useRouter } from "vue-router";
 import { formatTime } from "@/utils/getTime";
 import { getHotLists } from "@/api";
+import { getLogoUrl } from "@/utils/getLogoUrl";
 
 const router = useRouter();
 const store = mainStore();
@@ -156,8 +167,8 @@ const getHotListsData = async (name, isNew = false) => {
 
 // 链接跳转
 const jumpLink = (data) => {
-  if (!data.url || !data.mobileUrl) return $message.error("链接不存在");
-  const url = window.innerWidth > 680 ? data.url : data.mobileUrl;
+  if (!data.url) return $message.error("链接不存在");
+  const url = window.innerWidth > 680 ? data.url : (data.mobileUrl || data.url);
   if (store.linkOpenType === "open") {
     window.open(url, "_blank");
   } else if (store.linkOpenType === "href") {
@@ -348,33 +359,63 @@ onMounted(() => {
           color: #fff;
         }
       }
-      .text {
+      .item-body {
         display: flex;
-        flex-direction: column;
-        .title {
-          font-size: 16px;
-          margin-bottom: 4px;
+        align-items: flex-start;
+        gap: 14px;
+        width: 100%;
+        .cover {
+          width: 100px;
+          height: 68px;
+          object-fit: cover;
+          border-radius: 6px;
+          flex-shrink: 0;
+          background: var(--n-border-color);
         }
-        .desc {
-          overflow: hidden;
-          font-size: 14px;
-          display: -webkit-inline-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 5;
+        .text {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          .title {
+            font-size: 16px;
+            margin-bottom: 4px;
+          }
+          .desc {
+            overflow: hidden;
+            font-size: 14px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+          }
+          .message {
+            display: flex;
+            align-items: center;
+            margin-top: 8px;
+            gap: 12px;
+            .author {
+              display: flex;
+              align-items: center;
+              font-size: 13px;
+              .author-text {
+                margin-left: 4px;
+              }
+            }
+            .hot {
+              display: flex;
+              align-items: center;
+              font-size: 13px;
+              .hot-text {
+                margin-left: 4px;
+              }
+            }
+          }
         }
       }
-      .message {
-        display: flex;
-        align-items: center;
-        margin-top: 12px;
-        .hot {
-          display: flex;
-          align-items: center;
-          font-size: 13px;
-          .hot-text {
-            margin-left: 4px;
-            line-height: 0;
-          }
+      @media (max-width: 560px) {
+        .item-body .cover {
+          width: 72px;
+          height: 50px;
         }
       }
       .pagination {
