@@ -1,0 +1,14 @@
+name = "dailyhot-api"
+main = "src/workers/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# 环境变量（敏感信息用 Secrets）
+[vars]
+PORT = "6688"
+RSS_MODE = "false"
+SKIP_ENC = "false"
+
+# Secrets（需要在 Dashboard 或 wrangler secret 设置）
+# API_KEY = "your-api-key"
+# AES_KEY = "your-aes-key"
