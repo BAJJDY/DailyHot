@@ -157,7 +157,6 @@ const getHotListsData = async (name, isNew = false) => {
   listData.value = null;
   const item = store.newsArr.find((item) => item.name == name)
   getHotLists(item.name, isNew, item.params).then((res) => {
-    console.log(res);
     if (res.code === 200) {
       listData.value = res;
     } else {
